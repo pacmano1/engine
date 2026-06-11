@@ -40,6 +40,24 @@ On Windows use `gradlew.bat` instead of `./gradlew`. The assembled distribution 
 
 Dependencies are pinned and checksum-verified. To change a dependency version: edit `gradle/libs.versions.toml`, then run `./gradlew --write-verification-metadata sha256 help` to refresh the checksum metadata. Only when adding a **new** artifact that ships in the distribution does `gradle/vendored-layout.json` need a one-line placement entry, and the build fails with a message telling you so.
 
+### Changing build logic
+
+The build's correctness is guarded by output comparison, not by unit
+tests of the build scripts. When you change build logic (staging,
+packaging, jar definitions), use the snapshot protocol:
+
+```bash
+./gradlew build snapshotDistribution -DdisableSigning=true
+cp build/distribution-snapshot.txt /tmp/before.txt
+# ... make your build-logic change ...
+./gradlew build snapshotDistribution -DdisableSigning=true
+diff /tmp/before.txt build/distribution-snapshot.txt
+```
+
+Only the changes you intended should appear. For archive-level analysis
+of a difference, use `tools/build-parity/compare_builds.py` on two
+setup trees.
+
 ### Run and debug
 
 ```bash

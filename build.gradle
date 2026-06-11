@@ -363,6 +363,40 @@ tasks.register('clean') {
     dependsOn ':donkey:clean', ':server:clean', ':client:clean', ':command:clean', ':generator:clean'
 }
 
+// Writes one SHA line per file of the staged distribution to
+// build/distribution-snapshot.txt. The protocol for changing build
+// logic: snapshot, make the change, build, snapshot again, diff. Only
+// the changes you intended should appear (see CONTRIBUTING.md).
+tasks.register('snapshotDistribution') {
+    group = 'verification'
+    description = 'Writes a SHA-256 line per file of server/setup for before/after comparison of build changes.'
+    outputs.upToDateWhen { false }
+    doLast {
+        def setupDir = file('server/setup')
+        if (!setupDir.directory) {
+            throw new GradleException('server/setup does not exist; run ./gradlew build first')
+        }
+        def out = new StringBuilder()
+        def md = java.security.MessageDigest.getInstance('SHA-256')
+        setupDir.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+            md.reset()
+            f.withInputStream { ins ->
+                byte[] buf = new byte[1 << 20]
+                int n
+                while ((n = ins.read(buf)) > 0) {
+                    md.update(buf, 0, n)
+                }
+            }
+            def rel = setupDir.toPath().relativize(f.toPath())
+            out.append(md.digest().encodeHex()).append('  ').append(rel).append('\n')
+        }
+        def target = file('build/distribution-snapshot.txt')
+        target.parentFile.mkdirs()
+        target.text = out.readLines().sort().join('\n') + '\n'
+        logger.lifecycle "snapshot written: ${target} (${target.readLines().size()} files)"
+    }
+}
+
 // Aggregate: the per-project checks resolve each configuration in its
 // OWNING project's context (Gradle-9-safe; no cross-project resolution).
 tasks.register('verifyVendoredParity') {
