@@ -1,0 +1,1 @@
+MSH|^~\&|SENDAPP||||||ADT^A01^ADT_A01|MSGX||2.4

@@ -1,0 +1,1 @@
+{mirth_source=SENDFAC, mirth_type=ADT-A01, mirth_version=2.6}

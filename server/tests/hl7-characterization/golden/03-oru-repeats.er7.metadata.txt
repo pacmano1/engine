@@ -1,0 +1,1 @@
+{mirth_source=SENDFAC, mirth_type=ORU-R01, mirth_version=2.4}
